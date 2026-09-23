@@ -1,18 +1,94 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/*
+ * Terminal design tokens.
+ * graphite: the bezel of a dark monitor. amber: the phosphor of a terminal cursor.
+ * gain/loss (emerald/rose) are reserved for price movement, P&L and buy/sell only.
+ */
 @theme static {
-  --font-sans: 'Public Sans', sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
-  --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
+  --color-graphite-50: #f5f6f8;
+  --color-graphite-100: #e9ebef;
+  --color-graphite-200: #d3d7de;
+  --color-graphite-300: #b3b9c4;
+  --color-graphite-400: #8b93a1;
+  --color-graphite-500: #6b7381;
+  --color-graphite-600: #525a67;
+  --color-graphite-700: #3d4450;
+  --color-graphite-800: #262c35;
+  --color-graphite-900: #171b21;
+  --color-graphite-950: #0d1014;
+
+  --color-amber-50: #fff8e6;
+  --color-amber-100: #ffefc2;
+  --color-amber-200: #ffe08a;
+  --color-amber-300: #ffcc4d;
+  --color-amber-400: #ffb627;
+  --color-amber-500: #f5a20a;
+  --color-amber-600: #d98a05;
+  --color-amber-700: #b26f08;
+  --color-amber-800: #8c570d;
+  --color-amber-900: #73470f;
+  --color-amber-950: #432706;
+
+  /* domain motion tokens */
+  --tick-flash-ms: 600ms;
+  --tape-speed: 80s;
+}
+
+:root {
+  --ui-radius: 0.125rem;
+}
+
+/* Light: quiet graphite paper. Borders are low-opacity so structure is felt, not seen. */
+:root,
+.light {
+  --ui-bg: var(--ui-color-neutral-50);
+  --ui-bg-muted: var(--ui-color-neutral-100);
+  --ui-bg-elevated: #ffffff;
+  --ui-bg-accented: var(--ui-color-neutral-200);
+  --ui-border: color-mix(in oklch, var(--ui-color-neutral-300) 70%, transparent);
+  --ui-border-muted: color-mix(in oklch, var(--ui-color-neutral-300) 45%, transparent);
+  --ui-border-accented: var(--ui-color-neutral-400);
+}
+
+/* Dark: the native mode. Three whisper-quiet elevation steps: 950 page, 900 strips/panels, 800 accents. */
+.dark {
+  --ui-bg: var(--ui-color-neutral-950);
+  --ui-bg-muted: var(--ui-color-neutral-900);
+  --ui-bg-elevated: var(--ui-color-neutral-900);
+  --ui-bg-accented: var(--ui-color-neutral-800);
+  --ui-border: color-mix(in oklch, var(--ui-color-neutral-700) 55%, transparent);
+  --ui-border-muted: color-mix(in oklch, var(--ui-color-neutral-700) 35%, transparent);
+  --ui-border-accented: var(--ui-color-neutral-600);
+  --ui-text-dimmed: var(--ui-color-neutral-500);
+  --ui-text-muted: var(--ui-color-neutral-400);
+  --ui-text-toned: var(--ui-color-neutral-300);
+  --ui-text: var(--ui-color-neutral-200);
+  --ui-text-highlighted: var(--ui-color-neutral-50);
+}
+
+/* Every number, symbol and price is set in mono with tabular figures so columns line up as they tick. */
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Ticker tape: the strip is rendered twice and slides by half its width for a seamless loop. */
+@keyframes tape {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@utility animate-tape {
+  animation: tape var(--tape-speed) linear infinite;
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
 }

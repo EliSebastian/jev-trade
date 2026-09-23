@@ -1,0 +1,38 @@
+{
+  "name": "jev-trade",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "4.11.2",
+    "@tiptap/core": "^3.31.3",
+    "@tiptap/extension-bubble-menu": "^3.31.3",
+    "@tiptap/extension-code": "^3.31.3",
+    "@tiptap/extension-collaboration": "^3.31.3",
+    "@tiptap/extension-drag-handle": "^3.31.3",
+    "@tiptap/extension-drag-handle-vue-3": "^3.31.3",
+    "@tiptap/extension-floating-menu": "^3.31.3",
+    "@tiptap/extension-horizontal-rule": "^3.31.3",
+    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/extension-mention": "^3.31.3",
+    "@tiptap/extension-node-range": "^3.31.3",
+    "@tiptap/extension-placeholder": "^3.31.3",
+    "@tiptap/markdown": "^3.31.3",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
+    "@tiptap/suggestion": "^3.31.3",
+    "@tiptap/vue-3": "^3.31.3",
+    "nuxt": "^4.5.2",
+    "nuxt-icons": "4.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  }
+}

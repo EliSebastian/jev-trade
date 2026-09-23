@@ -7,9 +7,12 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^4.0.3",
     "@nuxt/ui": "4.11.2",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-bubble-menu": "^3.31.3",
@@ -33,6 +36,10 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vue": "^3.5.43",
-    "vue-router": "^5.3.1"
+    "vue-router": "^5.3.1",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.1"
   }
 }

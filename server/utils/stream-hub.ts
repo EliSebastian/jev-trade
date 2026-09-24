@@ -58,6 +58,8 @@ export interface StreamHub {
   status(): Record<StreamName, StreamStatus>
   peerCount(): number
   subscriberCount(symbol: string): number
+  /** Send a frame to every peer (used by the Jev engine for decisions and state). */
+  broadcast(msg: ServerMessage): void
   shutdown(): void
 }
 
@@ -319,6 +321,7 @@ export function createStreamHub(deps: HubDeps): StreamHub {
     removePeer,
     subscribe,
     unsubscribe,
+    broadcast,
     shutdown,
     status: () => ({ ...status }),
     peerCount: () => peers.size,

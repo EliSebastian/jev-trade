@@ -199,6 +199,18 @@ describe('stream hub: fan-out', () => {
     expect(() => stocks.emit('trade', trade('AAPL', 1))).not.toThrow()
     expect(hub.peerCount()).toBe(0)
   })
+
+  it('lets callers broadcast their own frames to every peer and still drops a throwing one', () => {
+    const { hub } = setup()
+    const p1 = fakePeer('p1')
+    const bad = fakePeer('bad', { throws: true })
+    hub.addPeer(p1)
+    hub.addPeer(bad)
+    const frame = { type: 'error' as const, message: 'engine says hi' }
+    expect(() => hub.broadcast(frame)).not.toThrow()
+    expect(p1.received).toContainEqual(frame)
+    expect(hub.peerCount()).toBe(1)
+  })
 })
 
 describe('stream hub: status and failures', () => {

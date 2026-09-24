@@ -1,75 +1,56 @@
-import { TimeFrame } from '@alpacahq/alpaca-trade-api'
 import type { AssetClass, SeedDto } from '#shared/types/trading'
 import { isCryptoSymbol, normalizeSymbol } from '#shared/utils/symbols'
-import { getAlpaca } from '../../utils/alpaca'
 import { withAlpaca } from '../../utils/errors'
+import { alpacaMarketData, fetchBars, fetchMinuteBars, fetchSnapshots } from '../../utils/market-data'
+import type { JevBar, SnapshotLike } from '../../utils/market-data'
 import { num } from '../../utils/normalize'
 
 const CACHE_MS = 30_000
 const MAX_SYMBOLS = 50
 const BARS = 60
+const DAY = 86_400_000
 const cache = new Map<string, { at: number, seed: SeedDto }>()
-
-type BarLike = { close: number, timestamp: Date }
-type SnapshotLike = { latestTrade?: { p?: number, t?: Date | string }, prevDailyBar?: { c?: number } }
 
 function empty(symbol: string, assetClass: AssetClass): SeedDto {
   return { symbol, assetClass, closes: [], lastPrice: null, lastTs: null, prevClose: null }
 }
 
-/** Newest-first bars from the SDK collector, returned oldest-first for drawing. */
-function closesOf(bars: BarLike[] | undefined): number[] {
-  if (!bars?.length) return []
-  const sorted = [...bars].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-  return sorted.slice(-BARS).map(b => b.close)
+function toSeed(symbol: string, assetClass: AssetClass, bars: JevBar[], snap: SnapshotLike | undefined): SeedDto {
+  const closes = bars.map(b => b.close)
+  return {
+    symbol,
+    assetClass,
+    closes,
+    lastPrice: num(snap?.latestTrade?.p) ?? closes.at(-1) ?? null,
+    lastTs: snap?.latestTrade?.t ? new Date(snap.latestTrade.t).toISOString() : null,
+    prevClose: num(snap?.prevDailyBar?.c) ?? (assetClass === 'crypto' ? closes[0] ?? null : null)
+  }
 }
 
 async function seedStocks(symbols: string[]): Promise<SeedDto[]> {
   if (!symbols.length) return []
-  const md = getAlpaca().marketData
-  const since = (days: number) => new Date(Date.now() - days * 86_400_000)
+  const md = alpacaMarketData()
   const [minute, snapshots] = await Promise.all([
-    md.getStockBars({ symbols, timeframe: TimeFrame.Minute, start: since(3), feed: 'iex', sort: 'desc', limit: 1000 }, { maxPerSymbol: BARS }),
-    md.stocks.stockSnapshots({ symbols: symbols.join(','), feed: 'iex' }) as Promise<Record<string, SnapshotLike>>
+    fetchMinuteBars(md, symbols, 'us_equity', { limit: BARS, sinceMs: 3 * DAY }),
+    fetchSnapshots(md, symbols, 'us_equity')
   ])
-  const thin = symbols.filter(s => closesOf(minute[s]).length < 10)
-  const hourly = thin.length
-    ? await md.getStockBars({ symbols: thin, timeframe: TimeFrame.Hour, start: since(10), feed: 'iex', sort: 'desc', limit: 1000 }, { maxPerSymbol: BARS })
-    : {}
+  // Thinly traded names (or a long weekend) may lack minute bars; fall back to hourly for the sparkline.
+  const thin = symbols.filter(s => (minute[s]?.length ?? 0) < 10)
+  const hourly = thin.length ? await fetchBars(md, thin, 'us_equity', { limit: BARS, sinceMs: 10 * DAY, timeframe: 'hour' }) : {}
   return symbols.map((symbol) => {
-    const closes = closesOf(minute[symbol]).length >= 10 ? closesOf(minute[symbol]) : closesOf(hourly[symbol])
-    const snap = snapshots?.[symbol]
-    return {
-      symbol,
-      assetClass: 'us_equity',
-      closes,
-      lastPrice: num(snap?.latestTrade?.p) ?? closes.at(-1) ?? null,
-      lastTs: snap?.latestTrade?.t ? new Date(snap.latestTrade.t).toISOString() : null,
-      prevClose: num(snap?.prevDailyBar?.c)
-    }
+    const bars = (minute[symbol]?.length ?? 0) >= 10 ? minute[symbol]! : hourly[symbol] ?? []
+    return toSeed(symbol, 'us_equity', bars, snapshots[symbol])
   })
 }
 
 async function seedCrypto(symbols: string[]): Promise<SeedDto[]> {
   if (!symbols.length) return []
-  const md = getAlpaca().marketData
-  const [minute, snapshotResp] = await Promise.all([
-    md.getCryptoBars({ loc: 'us', symbols, timeframe: TimeFrame.Minute, start: new Date(Date.now() - 86_400_000), sort: 'desc', limit: 1000 }, { maxPerSymbol: BARS }),
-    md.crypto.cryptoSnapshots({ loc: 'us', symbols: symbols.join(',') }) as Promise<{ snapshots?: Record<string, SnapshotLike> }>
+  const md = alpacaMarketData()
+  const [minute, snapshots] = await Promise.all([
+    fetchMinuteBars(md, symbols, 'crypto', { limit: BARS, sinceMs: DAY }),
+    fetchSnapshots(md, symbols, 'crypto')
   ])
-  const snapshots = snapshotResp?.snapshots ?? {}
-  return symbols.map((symbol) => {
-    const closes = closesOf(minute[symbol])
-    const snap = snapshots[symbol]
-    return {
-      symbol,
-      assetClass: 'crypto',
-      closes,
-      lastPrice: num(snap?.latestTrade?.p) ?? closes.at(-1) ?? null,
-      lastTs: snap?.latestTrade?.t ? new Date(snap.latestTrade.t).toISOString() : null,
-      prevClose: num(snap?.prevDailyBar?.c) ?? closes[0] ?? null
-    }
-  })
+  return symbols.map(symbol => toSeed(symbol, 'crypto', minute[symbol] ?? [], snapshots[symbol]))
 }
 
 export default defineEventHandler(async (event) => {

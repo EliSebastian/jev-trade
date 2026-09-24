@@ -1,5 +1,6 @@
 import { useDebounceFn, useWebSocket } from '@vueuse/core'
 import type { ServerMessage, StreamName, StreamStatus } from '#shared/types/trading'
+import { triggerLabel } from '#shared/utils/jev-labels'
 
 let started = false
 
@@ -19,6 +20,7 @@ export function useMarketFeed() {
     const account = useAccount()
     const positions = usePositions()
     const watchlist = useWatchlist()
+    const jev = useJev()
     const toast = useToast()
 
     const refreshAfterFill = useDebounceFn(() => {
@@ -86,6 +88,18 @@ export function useMarketFeed() {
           lastError.value = msg.message
           toast.add({ title: 'Stream error', description: msg.message, color: 'error' })
           break
+        case 'jev': {
+          jev.applyMessage(msg)
+          if (msg.event === 'decision' && msg.decision.action === 'executed') {
+            const d = msg.decision
+            toast.add({
+              title: `Jev ${d.verdict.toUpperCase()} ${d.symbol}`,
+              description: `${triggerLabel(d.trigger)} · p ${fmtProb(d.probability)} · c ${fmtProb(d.confidence)}`,
+              color: d.verdict === 'buy' ? 'gain' : 'loss'
+            })
+          }
+          break
+        }
         case 'pong':
           break
       }

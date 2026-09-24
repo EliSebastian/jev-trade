@@ -7,14 +7,17 @@ const watchlist = useWatchlist()
 const account = useAccount()
 const positions = usePositions()
 const orders = useOrders()
+const jev = useJev()
 const { seed } = useQuotes()
 const feed = useMarketFeed()
 
 onMounted(async () => {
   watchlist.load()
   feed.connect()
-  await Promise.all([account.refresh(), account.refreshClock(), positions.refresh(), orders.refresh()])
+  await Promise.all([account.refresh(), account.refreshClock(), positions.refresh(), orders.refresh(), jev.refresh()])
   seed([...new Set([...watchlist.symbols.value, ...positions.symbols.value])]).catch(() => {})
+  // The browser owns the watchlist; mirror it so the engine keeps trading with the tab closed.
+  watch(watchlist.symbols, symbols => jev.syncWatchlist(symbols), { immediate: true, deep: true })
 })
 
 useIntervalFn(() => account.refreshClock(), 30_000)
@@ -37,10 +40,15 @@ useIntervalFn(() => account.refreshClock(), 30_000)
         icon="i-lucide-key-round"
         class="rounded-none border-b border-default"
       />
-      <main class="grid min-h-0 flex-1 grid-cols-1 divide-y divide-default overflow-y-auto lg:grid-cols-[1fr_1fr_1.25fr] lg:divide-x lg:divide-y-0 lg:overflow-hidden">
+      <main
+        class="grid min-h-0 flex-1 grid-cols-1 divide-y divide-default overflow-y-auto [&>*]:border-default
+               lg:grid-cols-2 lg:grid-rows-2 lg:divide-y-0 lg:overflow-hidden lg:[&>*:nth-child(even)]:border-l lg:[&>*:nth-child(n+3)]:border-t
+               xl:grid-cols-[1fr_1fr_1.2fr_1.2fr] xl:grid-rows-1 xl:[&>*:nth-child(n+2)]:border-l xl:[&>*]:border-t-0"
+      >
         <WatchlistPanel />
         <PositionsPanel />
         <BlotterPanel />
+        <JevPanel />
       </main>
     </div>
 

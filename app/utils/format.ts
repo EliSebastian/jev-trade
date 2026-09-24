@@ -54,3 +54,15 @@ export function orderTypeLabel(type: string): string {
 export function statusLabel(status: string): string {
   return status.replace(/_/g, ' ').toUpperCase()
 }
+
+/** Probability or confidence as a two-digit percent: 0.82 → `82%`. */
+export function fmtProb(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+  return `${Math.round(value * 100)}%`
+}
+
+/** Score level 0..4 as one decimal: 3.2 → `3.2`. */
+export function fmtLevel(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+  return value.toFixed(1)
+}

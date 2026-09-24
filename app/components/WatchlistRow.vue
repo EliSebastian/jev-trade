@@ -3,6 +3,7 @@ const props = defineProps<{ symbol: string }>()
 const { quotes, changeOf } = useQuotes()
 const { remove } = useWatchlist()
 const { openTicket } = useOrderTicket()
+const jev = useJev()
 
 const quote = computed(() => quotes.value[props.symbol])
 const change = computed(() => changeOf(quote.value))
@@ -16,6 +17,8 @@ const tone = computed(() => {
   }
   return c > 0 ? 'up' : c < 0 ? 'down' : 'flat'
 })
+const verdict = computed(() => jev.latest.value[props.symbol])
+const asking = computed(() => jev.asking.value.includes(props.symbol))
 </script>
 
 <template>
@@ -24,7 +27,10 @@ const tone = computed(() => {
     :class="flashClass"
   >
     <div class="min-w-0">
-      <div class="num truncate text-[13px] font-medium text-highlighted">{{ symbol }}</div>
+      <div class="flex items-center gap-2">
+        <span class="num truncate text-[13px] font-medium text-highlighted">{{ symbol }}</span>
+        <JevVerdictBadge v-if="verdict" :verdict="verdict.verdict" :executed="verdict.action === 'executed'" />
+      </div>
       <div class="truncate text-[10px] uppercase tracking-[0.12em] text-dimmed">
         {{ quote?.assetClass === 'crypto' ? 'crypto · 24h' : 'stock' }}
       </div>
@@ -43,6 +49,17 @@ const tone = computed(() => {
     </div>
 
     <div class="flex items-center gap-1">
+      <UButton
+        icon="i-lucide-sparkles"
+        color="primary"
+        variant="ghost"
+        size="xs"
+        :loading="asking"
+        :disabled="!jev.available.value"
+        :aria-label="`Ask Jev about ${symbol}`"
+        title="Ask Jev"
+        @click="jev.ask(symbol)"
+      />
       <UButton label="B" color="gain" variant="soft" size="xs" class="num w-7 justify-center" :aria-label="`Buy ${symbol}`" @click="openTicket({ symbol, side: 'buy' })" />
       <UButton label="S" color="loss" variant="soft" size="xs" class="num w-7 justify-center" :aria-label="`Sell ${symbol}`" @click="openTicket({ symbol, side: 'sell' })" />
       <UButton

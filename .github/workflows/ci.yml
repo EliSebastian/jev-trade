@@ -1,6 +1,8 @@
 name: ci
 
-on: push
+on:
+  push:
+  pull_request:
 
 jobs:
   ci:
@@ -15,20 +17,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
+      # Bun runs the scripts; Node 22 is still needed by the nuxt/vitest binaries and by the `ai` package.
       - name: Install node
         uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-          cache: pnpm
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache bun packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm run lint
+      - name: Test
+        run: bun run test
 
-      - name: Typecheck
-        run: pnpm run typecheck
+      - name: Build
+        run: bun run build
+
+      # No lint or typecheck steps: the repo has no `lint`/`typecheck` scripts (ESLint packages are not
+      # installed and `nuxt typecheck` cannot run under TypeScript 7 / vue-tsc). Re-add them once fixed.

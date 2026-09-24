@@ -1,5 +1,23 @@
 import type { AssetClass } from '#shared/types/trading'
 
+/**
+ * Symbols a fresh install tracks, in the browser and in the Jev engine before any watchlist is saved.
+ * Crypto pairs verified tradable on Alpaca paper (2026-09-23); MKR/USD is not.
+ */
+export const WATCHLIST_DEFAULTS = [
+  // US equities
+  'AAPL', 'MSFT', 'TSLA', 'SPY',
+  // Majors
+  'BTC/USD', 'ETH/USD',
+  // Large and liquid
+  'SOL/USD', 'XRP/USD', 'DOGE/USD', 'LTC/USD', 'BCH/USD',
+  'LINK/USD', 'AVAX/USD', 'DOT/USD', 'UNI/USD', 'AAVE/USD',
+  // DeFi and smaller caps (thinner volume, noisier signals)
+  'CRV/USD', 'SUSHI/USD', 'GRT/USD', 'XTZ/USD', 'BAT/USD', 'YFI/USD',
+  // Meme coins (very volatile; expect the avoid flag often)
+  'SHIB/USD', 'PEPE/USD', 'TRUMP/USD'
+]
+
 /** Quote currencies Alpaca crypto pairs settle in, longest first so USDT wins over USD. */
 const QUOTE_CURRENCIES = ['USDT', 'USDC', 'USD', 'BTC'] as const
 

@@ -1,3 +1,5 @@
+import type { JevMessage } from './jev'
+
 /** Asset classes this app trades. Alpaca has more, but the UI only handles these two. */
 export type AssetClass = 'us_equity' | 'crypto'
 export type OrderSide = 'buy' | 'sell'
@@ -120,7 +122,7 @@ export interface PongMessage {
   type: 'pong'
 }
 
-export type ServerMessage = TickMessage | OrderMessage | StatusMessage | ErrorMessage | PongMessage
+export type ServerMessage = TickMessage | OrderMessage | StatusMessage | ErrorMessage | PongMessage | JevMessage
 
 export type ClientMessage =
   | { type: 'subscribe', symbols: string[] }

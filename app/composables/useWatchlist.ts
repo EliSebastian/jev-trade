@@ -1,7 +1,6 @@
 import type { AssetDto } from '#shared/types/trading'
-import { normalizeSymbol, toPathSymbol } from '#shared/utils/symbols'
+import { normalizeSymbol, toPathSymbol, WATCHLIST_DEFAULTS } from '#shared/utils/symbols'
 
-export const WATCHLIST_DEFAULTS = ['AAPL', 'MSFT', 'TSLA', 'SPY', 'BTC/USD', 'ETH/USD']
 const STORAGE_KEY = 'jev.watchlist.v1'
 
 export function useWatchlist() {
